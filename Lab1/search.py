@@ -139,8 +139,46 @@ def depth_first_search(problem):
 
 def breadth_first_search(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raise_not_defined()
+    # 1. Inicialización de la Frontera (Queue)
+    # Para BFS necesitamos una cola FIFO (First In, First Out) provista por util.Queue.
+    # Los primeros nodos en entrar serán los primeros en salir, garantizando la exploración por niveles.
+    frontier = util.Queue()
+
+    # 2. Conjunto de Estados Visitados (Explorados)
+    # Guardamos únicamente los estados (por ejemplo coordenadas o configuraciones)
+    # para evitar procesar el mismo estado múltiples veces y prevenir bucles infinitos.
+    visited = set()
+
+    # 3. Estado Inicial
+    # Encolamos una tupla con (estado_actual, camino_de_acciones_acumulado).
+    # Al principio, el camino es una lista vacía [] porque no se ha realizado ninguna acción.
+    start_state = problem.get_start_state()
+    frontier.push((start_state, []))
+
+    # 4. Bucle principal de búsqueda
+    while not frontier.is_empty():
+        # Extraemos el nodo más superficial (menos profundo) de la cola
+        current_state, actions = frontier.pop()
+
+        # Comprobación de meta: si el estado actual es el objetivo, retornamos las acciones
+        if problem.is_goal_state(current_state):
+            return actions
+
+        # Si el estado no ha sido expandido todavía
+        if current_state not in visited:
+            # Lo marcamos como visitado
+            visited.add(current_state)
+
+            # Expandimos el nodo obteniendo sus sucesores: (siguiente_estado, accion, coste)
+            for next_state, action, cost in problem.get_successors(current_state):
+                # Solo encolamos si el sucesor no ha sido visitado previamente
+                if next_state not in visited:
+                    # Concatenamos la nueva acción a una nueva lista (evitando modificar la original)
+                    next_actions = actions + [action]
+                    frontier.push((next_state, next_actions))
+
+    # Si se vacía la cola y no se encontró la meta, retornamos lista vacía
+    return []
 
 def uniform_cost_search(problem):
     """Search the node of least total cost first."""
