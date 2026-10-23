@@ -118,7 +118,7 @@ class SearchNode:
     # # def __hash__(self) -> int:
     # #     return hash(self.__state)
 
-def depth_first_search(problem):
+def depth_first_search(problem): #pila
     """
     Search the deepest nodes in the search tree first.
 
@@ -133,6 +133,34 @@ def depth_first_search(problem):
     print("Start's successors:", problem.get_successors(problem.get_start_state()))
     """
     "*** YOUR CODE HERE ***"
+    #inicialitzar frontera, llista de visitats i s0
+    frontier = util.Stack()
+    visited = set()
+    s0 = problem.get_start_state()
+    frontier.push((s0, []))
+    
+    #bucle
+    while not frontier.is_empty():
+        #escollir el node d'asobre de la pila
+        current_state, actions = frontier.pop()
+        
+        if problem.is_goal_state(current_state): return actions # si es goal acabem
+        if current_state not in visited: 
+            
+            visited.add(current_state) #l'afegim a visitats
+            #l'expandim
+            for next_state, action, cost in problem.get_successors(current_state): # get_successors tambe retorna el cost. aixi recorrem tos els fills
+                #si no ha estat visitat l'afegim a la llista
+                if next_state not in visited:
+                    
+                    next_actions = actions + [action] #sequencia d'accions fins a next_state
+                    frontier.push(next_state)
+                    
+    #si la cua esta buida i no hem trobat la solucio, retornem una llista budida --> fail
+    return []
+                
+            
+    
     util.raise_not_defined()
 
 
