@@ -153,8 +153,9 @@ def depth_first_search(problem): #pila
                 #si no ha estat visitat l'afegim a la llista
                 if next_state not in visited:
                     
+                    # guardem l'estat i el cami d'aquest node fill
                     next_actions = actions + [action] #sequencia d'accions fins a next_state
-                    frontier.push(next_state)
+                    frontier.push((next_state, next_actions))
                     
     #si la cua esta buida i no hem trobat la solucio, retornem una llista budida --> fail
     return []
