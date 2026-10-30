@@ -212,6 +212,28 @@ def breadth_first_search(problem):
 def uniform_cost_search(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+    frontier = util.PriorityQueue()
+    visited = set()
+    s0 = problem.get_start_state()
+    frontier.push((s0, [],0), 0) # estat, llista accions, cost i prioritat
+    
+    while not frontier.is_empty():
+        current_state, actions, current_cost = frontier.pop()
+        if current_state in visited: continue
+        if problem.is_goal_state(current_state): return actions
+        
+        visited.add(current_state)
+            
+            #expandim
+        for next_state, action, step_cost in problem.get_successors(current_state):
+                
+                if next_state not in visited:
+                    
+                    next_actions = actions + [action]
+                    next_cost = current_cost + step_cost
+                    frontier.push((next_state, next_actions, next_cost), next_cost)
+                    
+    return []
     util.raise_not_defined()
 
 def null_heuristic(state, problem=None):
@@ -224,6 +246,35 @@ def null_heuristic(state, problem=None):
 def a_star_search(problem, heuristic=null_heuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    frontier = util.PriorityQueue()
+    visited = set()
+    s0 = problem.get_start_state()
+    # prioritat inicial = g(s0) + h(s0) = 0 + h(s0)
+    h0 = heuristic(s0, problem)
+    frontier.push((s0, [], 0), h0)
+
+    while not frontier.is_empty():
+        current_state, actions, current_cost = frontier.pop()
+
+        # Si ja l'hem expandit, l'ignorem
+        if current_state in visited:
+            continue
+
+        if problem.is_goal_state(current_state):
+            return actions
+
+        visited.add(current_state)
+
+        # Expandim
+        for next_state, action, step_cost in problem.get_successors(current_state):
+            if next_state not in visited:
+                next_actions = actions + [action]
+                next_cost = current_cost + step_cost          # g(n')
+                h = heuristic(next_state, problem)            # h(n')
+                priority = next_cost + h                      # f(n') = g + h
+                frontier.push((next_state, next_actions, next_cost), priority)
+
+    return []
     util.raise_not_defined()
 
 # Abbreviations
