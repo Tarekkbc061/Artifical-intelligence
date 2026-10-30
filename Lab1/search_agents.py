@@ -532,7 +532,35 @@ def food_heuristic(state, problem):
     """
     position, food_grid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    food_list = food_grid.as_list()
+    # Si ja no queda menjar, el cost restant es 0
+    if not food_list:
+        return 0
+
+    # Guardem a heuristic_info un mapa per cachejar les distancies de laberint
+    if 'dist_cache' not in problem.heuristic_info:
+        problem.heuristic_info['dist_cache'] = {}
+    dist_cache = problem.heuristic_info['dist_cache']
+
+    # Si encara no hem calculat les distancies des de position, fem un BFS
+    if position not in dist_cache:
+        dist_map = {position: 0}
+        queue = [position]
+        walls = problem.walls
+        while queue:
+            curr = queue.pop(0)
+            d = dist_map[curr]
+            x, y = curr
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                nxt = (x + dx, y + dy)
+                if not walls[nxt[0]][nxt[1]] and nxt not in dist_map:
+                    dist_map[nxt] = d + 1
+                    queue.append(nxt)
+        dist_cache[position] = dist_map
+
+    # Distancia al menjar mes llunya (admissible i consistent)
+    dist_from_pos = dist_cache[position]
+    return max(dist_from_pos.get(f, 0) for f in food_list)
 
 
 def simplified_corners_heuristic(state, problem):
