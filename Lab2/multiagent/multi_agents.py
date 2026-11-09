@@ -165,7 +165,59 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # funcio recursiva per anar baixant per l'arbre minimax
+        def minimax(state, depth, agent_index):
+            # cas base: si guanyem, perdem o arribem al limit de profunditat retornem l'avaluacio
+            if state.is_win() or state.is_lose() or depth == self.depth:
+                return self.evaluation_function(state)
+
+            # si es el torn de pacman (agent 0) maximitzem, si es un fantasma minimitzem
+            if agent_index == 0:
+                return max_value(state, depth, agent_index)
+            else:
+                return min_value(state, depth, agent_index)
+
+        def max_value(state, depth, agent_index):
+            v = float("-inf")
+            legal_actions = state.get_legal_actions(agent_index)
+            if not legal_actions:
+                return self.evaluation_function(state)
+
+            # provem totes les accions i passem el torn al primer fantasma (1)
+            for action in legal_actions:
+                successor = state.generate_successor(agent_index, action)
+                v = max(v, minimax(successor, depth, 1))
+            return v
+
+        def min_value(state, depth, agent_index):
+            v = float("inf")
+            legal_actions = state.get_legal_actions(agent_index)
+            if not legal_actions:
+                return self.evaluation_function(state)
+
+            next_agent = agent_index + 1
+            for action in legal_actions:
+                successor = state.generate_successor(agent_index, action)
+                # si ja han mogut tots els fantasmes augmentem depth i torna a moure pacman (0)
+                if next_agent == game_state.get_num_agents():
+                    v = min(v, minimax(successor, depth + 1, 0))
+                else:
+                    # si queden fantasmes passem al seguent en el mateix nivell de profunditat
+                    v = min(v, minimax(successor, depth, next_agent))
+            return v
+
+        # des de l'estat actual (arrel) busquem quina accio de pacman ens dona millor valor
+        best_action = None
+        best_score = float("-inf")
+
+        for action in game_state.get_legal_actions(0):
+            successor = game_state.generate_successor(0, action)
+            score = minimax(successor, 0, 1)
+            if score > best_score:
+                best_score = score
+                best_action = action
+
+        return best_action
     
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -178,7 +230,72 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluation_function
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # igual que minimax pero passant alpha i beta per anar podant branques
+        def alphabeta(state, depth, agent_index, alpha, beta):
+            # cas base
+            if state.is_win() or state.is_lose() or depth == self.depth:
+                return self.evaluation_function(state)
+
+            if agent_index == 0:
+                return max_value(state, depth, agent_index, alpha, beta)
+            else:
+                return min_value(state, depth, agent_index, alpha, beta)
+
+        def max_value(state, depth, agent_index, alpha, beta):
+            v = float("-inf")
+            legal_actions = state.get_legal_actions(agent_index)
+            if not legal_actions:
+                return self.evaluation_function(state)
+
+            for action in legal_actions:
+                successor = state.generate_successor(agent_index, action)
+                v = max(v, alphabeta(successor, depth, 1, alpha, beta))
+
+                # si v supera beta ja podem podar (no amb >= perque ho demana l'autograder)
+                if v > beta:
+                    return v
+                alpha = max(alpha, v)
+            return v
+
+        def min_value(state, depth, agent_index, alpha, beta):
+            v = float("inf")
+            legal_actions = state.get_legal_actions(agent_index)
+            if not legal_actions:
+                return self.evaluation_function(state)
+
+            next_agent = agent_index + 1
+            for action in legal_actions:
+                successor = state.generate_successor(agent_index, action)
+
+                if next_agent == game_state.get_num_agents():
+                    v = min(v, alphabeta(successor, depth + 1, 0, alpha, beta))
+                else:
+                    v = min(v, alphabeta(successor, depth, next_agent, alpha, beta))
+
+                # si v es mes petit que alpha podem la branca
+                if v < alpha:
+                    return v
+                beta = min(beta, v)
+            return v
+
+        # inicialitzem alpha i beta i escollim la millor accio a l'arrel
+        alpha = float("-inf")
+        beta = float("inf")
+        best_action = None
+        best_score = float("-inf")
+
+        for action in game_state.get_legal_actions(0):
+            successor = game_state.generate_successor(0, action)
+            score = alphabeta(successor, 0, 1, alpha, beta)
+
+            if score > best_score:
+                best_score = score
+                best_action = action
+
+            # actualitzem alpha tambe a l'arrel
+            alpha = max(alpha, best_score)
+
+        return best_action
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
