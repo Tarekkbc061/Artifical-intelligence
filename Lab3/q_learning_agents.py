@@ -43,6 +43,8 @@ class QLearningAgent(ReinforcementAgent):
         ReinforcementAgent.__init__(self, **args)
 
         "*** YOUR CODE HERE ***"
+        # guardem els Q-values en un Counter (per defecte retorna 0.0 si un parell estat-accio no s'ha vist)
+        self.q_values = util.Counter()
 
     def get_q_value(self, state, action):
         """
@@ -51,7 +53,8 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # retornem el Q-value guardat al nostre Counter per aquest estat i accio
+        return self.q_values[(state, action)]
 
 
     def compute_value_from_q_values(self, state):
@@ -62,7 +65,20 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        accions_legals = self.get_legal_actions(state)
+
+        # si no hi ha accions legals (estat terminal), el valor per definicio es 0.0
+        if len(accions_legals) == 0:
+            return 0.0
+
+        # busquem el maxim Q-value de totes les accions legals disponibles
+        max_q = float("-inf")
+        for action in accions_legals:
+            q_val = self.get_q_value(state, action)
+            if q_val > max_q:
+                max_q = q_val
+
+        return max_q
 
     def compute_action_from_q_values(self, state):
         """
@@ -71,7 +87,23 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        accions_legals = self.get_legal_actions(state)
+
+        # si no hi ha accions possibles retornem None
+        if len(accions_legals) == 0:
+            return None
+
+        # agafem el maxim Q-value que podem tenir en aquest estat
+        max_q = self.compute_value_from_q_values(state)
+
+        # fem una llista amb totes les accions que empaten amb aquest maxim Q-value
+        millors_accions = []
+        for action in accions_legals:
+            if self.get_q_value(state, action) == max_q:
+                millors_accions.append(action)
+
+        # trenquem els empats de forma aleatoria amb random.choice per explorar millor
+        return random.choice(millors_accions)
 
     def get_action(self, state):
         """
@@ -88,7 +120,19 @@ class QLearningAgent(ReinforcementAgent):
         legal_actions = self.get_legal_actions(state)
         action = None
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # si no hi ha accions legals retornem None
+        if len(legal_actions) == 0:
+            return None
+
+        # tirem una moneda amb probabilitat epsilon per decidir si explorem o explotem
+        if util.flip_coin(self.epsilon):
+            # explorem: agafem una accio qualsevol a l'atzar
+            action = random.choice(legal_actions)
+        else:
+            # explotem: escollim la millor accio segons els nostres Q-values
+            action = self.compute_action_from_q_values(state)
+
+        return action
         
 
     def update(self, state, action, next_state, reward):
@@ -101,7 +145,12 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # apliquem l'equacio de Q-learning: (1 - alpha) * Q(s,a) + alpha * (reward + gamma * max Q(s', a'))
+        q_actual = self.get_q_value(state, action)
+        valor_seguent = self.compute_value_from_q_values(next_state)
+
+        mostra = reward + self.discount * valor_seguent
+        self.q_values[(state, action)] = (1.0 - self.alpha) * q_actual + self.alpha * mostra
 
     def get_policy(self, state):
         return self.compute_action_from_q_values(state)
@@ -164,7 +213,14 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # calculem el Q-value multiplicant cada feature pel seu pes corresponent
+        features = self.feat_extractor.get_features(state, action)
+        q_val = 0.0
+
+        for feat in features:
+            q_val += self.weights[feat] * features[feat]
+
+        return q_val
         
 
     def update(self, state, action, next_state, reward):
@@ -172,7 +228,13 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # calculem la diferencia entre la mostra actual i el Q-value que teniem
+        diferencia = (reward + self.discount * self.get_value(next_state)) - self.get_q_value(state, action)
+        features = self.feat_extractor.get_features(state, action)
+
+        # actualitzem el pes de cada feature amb la regla d'aprenentatge
+        for feat in features:
+            self.weights[feat] = self.weights[feat] + self.alpha * diferencia * features[feat]
 
     def final(self, state):
         "Called at the end of each game."
