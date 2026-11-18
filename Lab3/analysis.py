@@ -64,10 +64,13 @@ def question3e():
     return answer_discount, answer_noise, answer_living_reward
     # If not possible, return 'NOT POSSIBLE'
 
+def question6():
+    # amb nomes 50 episodis no es pot assegurar que aprengui la politica optima del pont al 99%
+    return 'NOT POSSIBLE'
+
 def question8():
-    answer_epsilon = None
-    answer_learning_rate = None
-    return answer_epsilon, answer_learning_rate
+    # amb nomes 50 episodis no es pot assegurar que aprengui la politica optima del pont al 99%
+    return 'NOT POSSIBLE'
     # If not possible, return 'NOT POSSIBLE'
 
 if __name__ == '__main__':
